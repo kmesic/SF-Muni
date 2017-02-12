@@ -1,22 +1,54 @@
+var margin = 10;
+
 var width = window.innerWidth;
 var height = window.innerHeight;
 
-var svg  = d3.select('body')
-             .append('svg')
-             .attr("width", width)
-             .attr("height", height);
+width -= margin - margin;
+var scaleRatio = 270000/1587;
 
-var streets = svg.append("g");
+var center = [-122.433701, 37.767683];
 
-var projection = d3.geo.albers()
-    .translate([width/2, height/2]);
+// Create svg for the map
+var zoom = d3.behavior.zoom()
+    .translate([0, 0])
+    .scale(1)
+    .scaleExtent([1, 8])
+    .on("zoom", zoomMap);
 
-var geoPath = d3.geo.path()
-    .projection(projection);
+var svg  = d3.select("body")
+             .append("svg")
+             .attr("id", "sf-map")
+             .attr("viewBox", "0 0 " + width + " " + height )
+             .attr("preserveAspectRatio", "xMinYMin");
 
-streets.selectAll("path")
-    .data("streets.json")
-    .enter()
-    .append( "path" )
-    .attr( "fill", "#ccc" )
-    .attr( "d", geoPath );
+var g = svg.append("g");
+
+
+function zoomMap() {
+    g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+}
+
+d3.json("sfmaps/neighborhoods.json", createMap);
+
+function createMap(data) {
+    var projection = d3.geo.mercator()
+        .scale(width * scaleRatio)
+        .center(center)
+        .translate([width /2, height /1.9]);
+
+    var geoPath = d3.geo.path()
+        .projection(projection);
+
+
+    g.selectAll("path")
+        .data(data.features)
+        .enter()
+        .append( "path" )
+        .attr( "d", geoPath )
+        .style( "fill", "#f93" )
+        .style("stroke", "black")
+        .style("stroke-width", 1);
+
+    svg.call(zoom) 
+       .call(zoom.event);
+}
