@@ -1,0 +1,4 @@
+Add freeway tooltips
+Modularize code better
+Add style and comments to sftransit
+Work on nextbus API

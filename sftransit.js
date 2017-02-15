@@ -54,6 +54,9 @@ function createMap() {
 
     d3.json("sfmaps/neighborhoods.json", function(data) {
         var map = addData(data.features, "neighborhood");
+        map.attr("id", function(d) {
+            return d.properties.neighborho.replace(/[ \\/]/g, '');
+        });
         map.on('mousemove', function(currData) {
                 var mouse = d3.mouse(svg.node()).map(function(loc) {
                     return parseInt(loc);
@@ -67,6 +70,40 @@ function createMap() {
                     tooltip.classed('hide', true);
             });
     });
+
+    d3.json("sfmaps/streets.json", function(data) {
+        function addStreetClass(d) {
+            return "streets " + d.properties.STREETNAME.replace(/ /g,'');
+        }
+        var map = addData(data.features, addStreetClass);
+        map.on('mousemove', function(currData) {
+                var mouse = d3.mouse(svg.node()).map(function(loc) {
+                    return parseInt(loc);
+                });
+
+                d3.select("#" + currData.properties.NHOOD.replace(/[ \\/]/g, ''))
+                   .classed('showNHOOD', true);
+
+                tooltip.classed('hide', false)
+                    .attr('style', 'left:' + (mouse[0] + 15) +
+                      'px; top:' + (mouse[1] - 35) + 'px')
+                    .html(currData.properties.NHOOD);
+            })
+            .on('mouseout', function(currData) {
+                    tooltip.classed('hide', true);
+                    d3.select("#" + currData.properties.NHOOD.replace(/[ \\/]/g, ''))
+                      .classed('showNHOOD', false);
+            });
+
+        d3.json("sfmaps/freeways.json", function(data) {
+            addData(data.features, "freeways");
+        });
+    });
+
+    d3.json("sfmaps/arteries.json", function(data) {
+        var map = addData(data.features, "arteries");
+    });
+
 
     svg.call(zoom) 
        .call(zoom.event);
