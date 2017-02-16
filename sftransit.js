@@ -1,3 +1,10 @@
+/**
+ * File: sftransit.js
+ * Author: Kenan Mesic
+ * Date: 02/16/2017
+ * Description: Controls all drawing to the map of SF.
+ */
+
 // GLOBALS
 var init = true;
 var margin = 10;
@@ -42,76 +49,55 @@ var mapData = [];
 
 var vehiclesG = {};
 
-// When the user zooms, go through all the different data types 
-// (neighboorhoods, streets, arteries, and freeways) and scale appropriately
-function zoomMap() {
-    for (var i = 0; i < mapData.length; i++)  {
-        mapData[i].attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-    }
-}
-
-createMap();
+/**
+ * Initializes the map and creates all necessary drawings for the map like
+ * the neighboorhoods and streets
+ */
 function createMap() {
+    // Create the projection function to translate every point on map according
+    // to the sites screen
     projection = d3.geo.mercator()
         .scale(width * scaleRatio)
         .center(center)
         .translate([width /2, height /1.9]);
 
+    // Create geoJson projection function to make it easy to draw out geoJson
     geoPath = d3.geo.path()
         .projection(projection);
 
+    // Read in the neighboords and draw them out
     d3.json("sfmaps/neighborhoods.json", function(data) {
-        var map = addData(data.features, "neighborhood");
+        var map = drawData(data.features, "neighborhood");
         map.attr("id", function(d) {
             return d.properties.neighborho.replace(/[ \\/]/g, '');
         });
-        map.on('mouseenter', function(currData) {
-                /*var mouse = d3.mouse(svg.node()).map(function(loc) {
-                    return parseInt(loc);
-                });
-                tooltip.classed('hide', false)
-                    .attr('style', 'left:' + (mouse[0] + 15) +
-                      'px; top:' + (mouse[1] - 35) + 'px')
-                    .html(currData.properties.neighborho);*/
-            })
-            .on('mouseleave', function() {
-                   // tooltip.classed('hide', true);
-            });
     });
 
+    /**
+     * Read in the streets and draw them out. Because of how much more data
+     * is in streets it will almost 99% load after neighhoods, thus we can
+     * allow it asynchrously load along the neighborhoods
+     */
     d3.json("sfmaps/streets.json", function(data) {
         function addStreetClass(d) {
             return "streets " + d.properties.STREETNAME.replace(/ /g,'');
         }
-        var map = addData(data.features, addStreetClass);
-        map.on('mousemove', function(currData) {
-                /*var mouse = d3.mouse(svg.node()).map(function(loc) {
-                    return parseInt(loc);
-                });
+        var map = drawData(data.features, addStreetClass);
 
-                d3.select("#" + currData.properties.NHOOD.replace(/[ \\/]/g, ''))
-                   .classed('showNHOOD', true);
-
-                tooltip.classed('hide', false)
-                    .attr('style', 'left:' + (mouse[0] + 15) +
-                      'px; top:' + (mouse[1] - 35) + 'px')
-                    .html(currData.properties.NHOOD);*/
-            })
-            .on('mouseout', function(currData) {
-                    /*tooltip.classed('hide', true);
-                    d3.select("#" + currData.properties.NHOOD.replace(/[ \\/]/g, ''))
-                      .classed('showNHOOD', false);*/
-            });
-
+        // Draw the freeways after the streets are drawn
         d3.json("sfmaps/freeways.json", function(data) {
-            addData(data.features, "freeways");
+            drawData(data.features, "freeways");
         });
 
 
+        // Set init true as first time drawing everything
         init = true;
-        //getRoutePaths("M");
-        getRoutes();
+    
+        // Get all the routes and vehicles and draw them out
+        getAllInfoRoutesandDraw();
 
+        // Every 10 secs, poll on the vehicles for each route
+        // and update any changes on the map
         setInterval(function() {
             init = false;
             for (var id in routes) {
@@ -125,17 +111,29 @@ function createMap() {
 
     });
 
-   /* d3.json("sfmaps/arteries.json", function(data) {
-        var map = addData(data.features, "arteries");
-    });*/
-
-
+    // Allow map to handle zoom and anyone else listening to map's zoom 
     svg.call(zoom) 
        .call(zoom.event);
 }
 
+/**
+ * When the user zooms, zoomMap will go through all the different
+ * groupings of drawings (neighboords, routes...etc) and scale appropriately
+ * for the zoom
+ */
+function zoomMap() {
+    for (var i = 0; i < mapData.length; i++)  {
+        mapData[i].attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+    }
+}
 
-function addData(data, dataName) {
+/**
+ * Draws the data passed in onto the map.
+ * @param {array} data The data to draw out on the map
+ * @param {string} dataName What to classify the drawing
+ * @return {selection} The grouping of the drawing created
+ */
+function drawData(data, dataName) {
     var g = svg.append("g");
     mapData.push(g);
 
@@ -147,8 +145,17 @@ function addData(data, dataName) {
             .attr("class", dataName);
 }
 
+/**
+ * Draws the route onto the map.
+ * @param {array} paths Array of all the paths to draw for the route.
+ *     This is generally received from the nextbus xml feed about the
+ *     route.
+ * @param {string} route Tagname of the route
+ * @param {string} color Color of the route
+ */
 function drawRoute(paths, route, color) {
     
+    // Create route group
     var g = svg.append("g")
                .attr("id", "route" + route)
                .attr("class", "routepath")
@@ -157,6 +164,7 @@ function drawRoute(paths, route, color) {
     
     mapData.push(g);
 
+    // Go through all the paths to draw and create a geoJson
     var currPoints = [];
     paths.forEach(function(path, index) {
         var points = path.children;
@@ -172,12 +180,18 @@ function drawRoute(paths, route, color) {
             });
         }
 
+        // Draw out all the paths
         g.selectAll("path")
          .data(currPoints)
          .enter()
          .append( "path" )
          .attr( "d", geoPath )
          .on('mouseenter', function(currData) {
+                /**
+                 * When hovering over path, display route title
+                 * in the tooltip and double size of route so the
+                 * user can see the entire route.
+                 **/
                 var mouse = d3.mouse(svg.node()).map(function(loc) {
                     return parseInt(loc);
                 });
@@ -191,6 +205,10 @@ function drawRoute(paths, route, color) {
                     .html(currData.properties.title);
          })
          .on('mouseleave', function(currData) {
+                /**
+                 * When done hovering, remove the tooltip and
+                 * return the route path to normal size
+                 */
                 tooltip.classed('hide', true);
 
                 var curr = d3.select(this).node();
@@ -200,7 +218,14 @@ function drawRoute(paths, route, color) {
     });
 }
 
+/**
+ * Draws the vehicles for the route onto the map.
+ * @param {array} vehicles Array of all the vehicles to draw for the route.
+ *      Generally received from nextbusapi
+ * @param {string} route Tagname of the route
+ */
 function drawVehicles(vehicles, route) {
+    // Go through all vechiles and store into an array
     var data = [];
     for (var id in vehicles) {
         if (vehicles.hasOwnProperty(id)) {
@@ -208,6 +233,10 @@ function drawVehicles(vehicles, route) {
         }
     }
 
+    /**
+     * If init then vehicles are being drawn for the first time,
+     * thus need to create groups for each route of vehicles
+     **/
     if (init == true) {
         vehiclesG[route] = svg.append("g")
                         .attr("class", "vehicles")
@@ -215,12 +244,14 @@ function drawVehicles(vehicles, route) {
         mapData.push(vehiclesG[route]);
     }
 
+    // Bind data to each vehicle
     var mapVehicle = vehiclesG[route].selectAll("circle")
                        .data(data, function(d) {
                             return d.id;
                        });
 
-   mapVehicle.enter()
+    // Create a new vehicle with the projected points
+    mapVehicle.enter()
         .append("circle")
         .attr("cx", function (d) { return projection(d.loc)[0]; })
 	    .attr("cy", function (d) { return projection(d.loc)[1]; })
@@ -228,32 +259,13 @@ function drawVehicles(vehicles, route) {
         .attr("class", "vechile")
 	    .attr("fill", "#" + routes[route].color)
         .attr("stroke", "black");
-
-
-    //TODO Maybe change to triangles if I have time...
-    /*mapVehicle.enter()
-        .append("path")
-        .attr("d", d3.svg.symbol().size(20).type("triangle-up"))
-        .attr("class", "vechile")
-        .attr("fill", "red")
-        .attr("stroke", "black")
-        .attr("transform", function(d) {
-                return "translate(" + projection(d.loc)[0] +
-                       "," + projection(d.loc)[1] + ") rotate(-45)";
-        });*/
-
-   /* mapVehicle.transition()
-              .duration(refreshVehicles)
-              .attr("transform", function(d) {
-                    return "translate(" + projection(d.loc)[0] +
-                           "," + projection(d.loc)[1] + ")";
-              });
-    */
        
+    // Update any vehicles already existing, but have new points
     mapVehicle.transition()
               .duration(refreshVehicles)
               .attr("cx", function (d) { return projection(d.loc)[0]; })
 	          .attr("cy", function (d) { return projection(d.loc)[1]; });
 
+    // Remove any vehicles that are no longer available
     mapVehicle.exit().transition().remove();
 }
