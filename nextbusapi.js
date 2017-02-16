@@ -107,17 +107,15 @@ function getVehicleInfo(routeTag) {
 
         var vehicles = data.getElementsByTagName("vehicle");
 
+        // Get the lastTime polled
+        var lastTime = data.getElementsByTagName("lastTime");
+        if (lastTime.length !== 0) {
+            routes[routeTag].vehiclePolled = lastTime[0].getAttribute("time");
+        }
+
         // Go through all vehicles
         for(var i = 0; i < vehicles.length; i++) {
             var vehicle = vehicles[i];
-            
-            // if not vehicle, then only store the lastTime polled, otherwise don't need
-            if (vehicle.tagName !== "vehicle") {
-                if (vehicle.tagName === "lastTime") {
-                    routes[routeTag].vehiclePolled = vehicle.getAttribute("time");
-                }
-                continue;
-            }
 
             // Store revelent info about the vehicle
             var vehicleInfo = {
