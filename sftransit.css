@@ -1,5 +1,5 @@
 body {
-    background: darkslateblue;
+    background: lightgrey;
 }
 
 #sf-map {
@@ -10,12 +10,12 @@ body {
 .neighborhood {
     /*fill: #f93;*/
     fill: lightblue;
-    stroke: black;
+    stroke: #2b3638;
     stroke-width: .5;
 }
 
 .neighborhood:hover {
-    fill: #666;
+   /* fill: #666;*/
 }
 
 .showNHOOD {
@@ -50,4 +50,8 @@ div.tooltip {
     border-radius: 2px;
     opacity: 0.9;
     position: absolute;
+}
+
+.routepath {
+    stroke-linejoin: round;
 }
