@@ -34,7 +34,7 @@ body {
 
 
 .hide {
-        display: none;
+    display: none;
 }
 
 .freeways {
@@ -54,4 +54,18 @@ div.tooltip {
 
 .routepath {
     stroke-linejoin: round;
+}
+
+#filter {
+    position: absolute;
+    top: 25px;
+    right: 25px;
+}
+
+h4 {
+    text-align: center;
+}
+
+ul p {
+    margin-left: 10px;
 }

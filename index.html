@@ -1,13 +1,20 @@
 <html>
     <head>
         <title>SF Muni</title>
-        <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.0/css/materialize.min.css">     
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.0/js/materialize.min.js"></script>
-        <script src="nextbusapi.js" type="text/javascript"></script>
-        <script src="sftransit.js" type="text/javascript" defer></script>
         <link rel="stylesheet" type="text/css" href="sftransit.css">
     </head>
     <body>
+        <a href="#" id="filter" data-activates="slide-out" class="button-collapse btn-floating btn-large waves-effect waves-light red"><i class="large material-icons">visibility</i></a>
+        <ul id="slide-out" class="side-nav">
+            <li><h4>Routes</h4></li>
+        </ul>
+        <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+        <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.0/js/materialize.min.js"></script>
+        <script src="nextbusapi.js" type="text/javascript"></script>
+        <script src="index.js" type="text/javascript" defer></script>
+        <script src="sftransit.js" type="text/javascript" defer></script>
     </body>
 </html>

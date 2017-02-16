@@ -107,13 +107,18 @@ function createMap() {
             addData(data.features, "freeways");
         });
 
+
+        init = true;
+        //getRoutePaths("M");
         getRoutes();
 
         setInterval(function() {
             init = false;
             for (var id in routes) {
                 if (routes.hasOwnProperty(id)) {
-                    getVehicleInfo(id);
+                    if(routes[id].off === false) {
+                        getVehicleInfo(id);
+                    }
                 }
             }
         },refreshVehicles);
@@ -205,7 +210,8 @@ function drawVehicles(vehicles, route) {
 
     if (init == true) {
         vehiclesG[route] = svg.append("g")
-                        .attr("class", "vehicles");
+                        .attr("class", "vehicles")
+                        .attr("id", "vehicles-" + route);
         mapData.push(vehiclesG[route]);
     }
 

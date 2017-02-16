@@ -31,6 +31,7 @@ function getRoutePaths(routetag) {
         routeInfo["tag"] = route.getAttribute("tag");
         routeInfo["title"] = route.getAttribute("title");
         routeInfo["stops"] = [];
+        routeInfo["off"] = false;
         routeInfo["vehiclePolled"] = 0;
         routeInfo["vehicles"] = {};
 
@@ -55,7 +56,7 @@ function getRoutePaths(routetag) {
 
             routeInfo["stops"].push(currentStop);
         }
-        
+
         routes[routeInfo["tag"]] = routeInfo;
         drawRoute(paths, routeInfo["tag"], routeInfo["color"]);
         getVehicleInfo(routeInfo["tag"]);
