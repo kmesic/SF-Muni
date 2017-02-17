@@ -20,7 +20,7 @@ var scaleRatio = 270000/1587;
 var center = [-122.433701, 37.767683];
 
 // Refresh rate of updating vehicles
-var refreshVehicles = 10000;
+var refreshVehicles = 15000;
 
 // On zoom and pan scale the map
 var zoom = d3.behavior.zoom()
